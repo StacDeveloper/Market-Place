@@ -9,9 +9,9 @@ const LatestListings = () => {
     <div className='mt-20 mb-8'>
       <Title title='Latest Listings' description='Discover the latest social profiles available right now.' />
       <div className='flex flex-col gap-6 px-6'>
-        {listings.slice(0,4).map((list,index)=>(
+        {listings.slice(0, 4).map((list, index) => (
           <div key={index} className='mx-auto w-full max-w-3xl rounded-3xl'>
-            <ListingCard ListingData={list}/>
+            <ListingCard ListingData={list} />
           </div>
         ))}
       </div>

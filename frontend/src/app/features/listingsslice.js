@@ -15,9 +15,6 @@ const listingSlice = createSlice({
     reducers: {
         setListings: ({ state, action }) => {
             state.listings = action.payload
-        },
-        setUserListings: ({ state, action }) => {
-            state.userListings = action.payload
         }
     }
 })

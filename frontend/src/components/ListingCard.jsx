@@ -7,7 +7,7 @@ const ListingCard = ({ ListingData }) => {
     const currency = import.meta.env.VITE_CURRENCY || "$"
     const navigate = useNavigate()
     return (
-        <div className='relative bg-white roudned-2xl shadow-sm border-gray-100 overflow-hidden hover:shadow-md transition'>
+        <div className='relative bg-white roudned-2xl shadow-sm border-gray-100 overflow-hidden hover:shadow-md transition rounded-2xl'>
             {ListingData.featured && (
                 <>
                     <p className='py-1' />

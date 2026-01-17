@@ -1,5 +1,4 @@
 import React from 'react'
-import { useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 
 const Hero = () => {
@@ -7,8 +6,6 @@ const Hero = () => {
     const [input, setInput] = React.useState('')
     const [menuOpen, setMenuOpen] = React.useState(false)
     const navigate = useNavigate()
-    const { userListings } = useSelector(state => state.listing)
-    console.log(userListings)
 
     const onSubmitHandler = (e) => {
         e.preventDefault()
