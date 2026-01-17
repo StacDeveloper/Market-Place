@@ -1,3 +1,4 @@
+
 import { configureStore } from "@reduxjs/toolkit"
 import listingReducer from "./features/listingsslice"
 import chatReducer from "./features/chatslice"
@@ -7,4 +8,5 @@ export const store = configureStore({
         listing: listingReducer,
         chat: chatReducer
     }
+
 })
