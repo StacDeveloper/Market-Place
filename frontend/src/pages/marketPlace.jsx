@@ -1,12 +1,14 @@
 import React, { useState } from 'react'
 import { ArrowLeftIcon, FilterIcon } from "lucide-react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { useSelector } from "react-redux"
 import ListingCard from '../components/ListingCard'
 import FilteredSidebar from '../components/FilteredSidebar'
 
 const MarketPlace = () => {
 
+  const [searchParams] = useSearchParams()
+  const search = searchParams.get("search")
   const navigate = useNavigate()
   const [showFilterPhone, SetshowFilterPhone] = useState(false)
   const [filters, SetFilters] = useState({
@@ -15,10 +17,40 @@ const MarketPlace = () => {
     minFollowers: 0,
     niche: null,
     verfied: false,
-    monetized: false
+    monitized: false
   })
   const { listings } = useSelector(state => state.listing)
-  const filteredListings = listings.filter((list) => { return true })
+  const filteredListings = listings.filter((list) => {
+    if (filters.maxPrice) {
+      if (list.price > filters.maxPrice) return false
+    }
+    if (filters.platform && filters.platform.length > 0) {
+      if (!filters.platform.includes(list.platform)) return false
+    }
+    if (filters.minFollowers) {
+      if (list.followers_count < filters.minFollowers) return false
+    }
+    if (filters.niche && filters.niche.length > 0) {
+      if (!filters.niche.includes(list.niche)) return false
+    }
+    if (filters.verfied && list.verfied !== filters.verfied) return false
+    if (filters.monitized && list.monitized !== filters.monitized) return false
+
+    if (search) {
+      const trimed = search.trim()
+      if (
+        !list.title.toLowerCase().includes(trimed.toLowerCase())
+        && !list.description.toLowerCase().includes(trimed.toLowerCase())
+        && !list.username.toLowerCase().includes(trimed.toLowerCase())
+        && !list.platform.toLowerCase().includes(trimed.toLowerCase())
+        && !list.niche.toLowerCase().includes(trimed.toLowerCase())
+      ) {
+        return false
+      }
+    }
+
+    return true
+  })
 
 
   return (
