@@ -1,4 +1,5 @@
 
+
 import React from 'react'
 import Hero from '../components/Hero'
 import LatestListings from '../components/LatestListings'
@@ -18,4 +19,7 @@ const HomePage = () => {
         </div>
     )
 }
+
+
+export default HomePage
 
