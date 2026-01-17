@@ -4,6 +4,7 @@ import LatestListings from '../components/LatestListings'
 import Plans from '../components/Plans'
 import CTA from '../components/CTA'
 import Footer from '../components/Footer'
+import { useSelector } from 'react-redux'
 
 const HomePage = () => {
     return (
@@ -12,7 +13,7 @@ const HomePage = () => {
             <LatestListings />
             <Plans />
             <CTA />
-            <Footer/>
+            <Footer />
         </div>
     )
 }
