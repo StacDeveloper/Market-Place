@@ -15,7 +15,7 @@ const chateSlice = createSlice({
                 state.chatId = action.payload.chatId
             }
         },
-        createChat: (state) => {
+        clearChat: (state) => {
             state.listing = null
             state.isOpen = false
             state.chatId = null
@@ -23,5 +23,5 @@ const chateSlice = createSlice({
     }
 })
 
-export const { setChat, createChat } = chateSlice.actions
+export const { setChat, clearChat } = chateSlice.actions
 export default chateSlice.reducer
