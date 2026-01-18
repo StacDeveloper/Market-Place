@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom'
 import StatsCard from '../components/StatsCard'
 import { platformIcons } from '../assets/assets'
 import { useState } from 'react'
+import CredentialsSubmission from '../components/CredentialsSubmission'
+import WithdrawModel from '../components/WithdrawModel'
 
 const MyListings = () => {
   const { userListings, balance } = useSelector((state) => state.listing)
@@ -99,7 +101,7 @@ const MyListings = () => {
           { label: 'Available', value: balance.available, icon: CoinsIcon },
         ].map((label, index) => {
           return (
-            <div key={index} className='flex flex-1 items-center justify-between p-4 rounded-lg border border-gray-100 cursor-pointer'>
+            <div onClick={() => label.label === "Available" && SetShowWithdrawal(true)} key={index} className='flex flex-1 items-center justify-between p-4 rounded-lg border border-gray-100 cursor-pointer'>
               <div className='flex items-center gap-3'>
                 <label.icon className={"text-gray-500 w-6 h-6"} />
                 <span className='font-medium text-gray-600'>{label.label}</span>
@@ -139,7 +141,7 @@ const MyListings = () => {
                             <div className='bg-white text-gray-600 text-xs rounded border border-gray-200 p-2 px-3'>
                               {!list.isCredentialSubmitted && (
                                 <>
-                                  <button className='flex items-center gap-2 text-nowrap'>
+                                  <button onClick={() => SetShowCredentials(list)} className='flex items-center gap-2 text-nowrap'>
                                     Add Credentials
                                   </button>
                                   <hr className='border border-gray-200 my-2' />
@@ -185,7 +187,7 @@ const MyListings = () => {
                           <TrashIcon className='size-4' />
                         </button>
                       )}
-                      <button onClick={() => { navigate(`/edit-listing/${list.id}`) }} className='p-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-indigo-600'>
+                      <button onClick={() => { navigate(`/edit-listings/${list.id}`) }} className='p-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-indigo-600'>
                         <Edit className="size-4" />
                       </button>
                       <button onClick={toggleStatus(list.id)} className='p-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-purle-600'>
@@ -203,6 +205,14 @@ const MyListings = () => {
             </div>
           ))}
         </div>
+      )}
+
+      {showCredentials && (
+        <CredentialsSubmission listing={showCredentials} onClose={() => SetShowCredentials(null)} />
+      )}
+
+      {withDrawal && (
+        <WithdrawModel onClose={() => SetShowWithdrawal(null)} />
       )}
 
       {/* Footer */}
