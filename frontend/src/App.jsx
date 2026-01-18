@@ -10,12 +10,13 @@ import MyOrders from './pages/myorders'
 import Loading from './pages/Loading'
 import Navbar from './components/Navbar'
 import ChatBox from './components/ChatBox'
-
+import { Toaster } from "react-hot-toast"
 
 const App = () => {
   const { pathname } = useLocation()
   return (
     <div>
+      <Toaster />
       {!pathname.includes("/admin") && <Navbar />}
       <Routes>
         <Route path={"/"} element={<HomePage />} />
@@ -28,7 +29,7 @@ const App = () => {
         <Route path={"/my-orders"} element={<MyOrders />} />
         <Route path={"/loading"} element={<Loading />} />
       </Routes>
-      <ChatBox/>
+      <ChatBox />
     </div>
   )
 }
