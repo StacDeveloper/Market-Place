@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { ArrowLeftIcon, FilterIcon } from "lucide-react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { useSelector } from "react-redux"
 import ListingCard from '../components/ListingCard'
 import FilteredSidebar from '../components/FilteredSidebar'
+
 
 const MarketPlace = () => {
 
@@ -11,15 +12,17 @@ const MarketPlace = () => {
   const search = searchParams.get("search")
   const navigate = useNavigate()
   const [showFilterPhone, SetshowFilterPhone] = useState(false)
+  const { listings } = useSelector(state => state.listing)
+
   const [filters, SetFilters] = useState({
     platform: null,
-    maxPrice: 100000,
+    maxPrice: Infinity,
     minFollowers: 0,
     niche: null,
-    verfied: false,
-    monitized: false
+    verified: false,
+    monetized: false
   })
-  const { listings } = useSelector(state => state.listing)
+
   const filteredListings = listings.filter((list) => {
     if (filters.maxPrice) {
       if (list.price > filters.maxPrice) return false
@@ -33,8 +36,8 @@ const MarketPlace = () => {
     if (filters.niche && filters.niche.length > 0) {
       if (!filters.niche.includes(list.niche)) return false
     }
-    if (filters.verfied && list.verfied !== filters.verfied) return false
-    if (filters.monitized && list.monitized !== filters.monitized) return false
+    if (filters.verified && list.verified !== filters.verified) return false
+    if (filters.monetized && list.monetized !== filters.monetized) return false
 
     if (search) {
       const trimed = search.trim()
@@ -51,6 +54,8 @@ const MarketPlace = () => {
 
     return true
   })
+
+  console.log(filteredListings)
 
 
   return (
@@ -73,7 +78,9 @@ const MarketPlace = () => {
           {filteredListings.sort((a, b) => a.featured ? -1 : b.featured ? 1 : 0).map((list, index) => (
             <ListingCard ListingData={list} key={index} />
           ))}
+          {}
         </div>
+
       </div>
     </div>
   )

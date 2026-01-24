@@ -1,4 +1,4 @@
-import prisma from "../configs/prisma"
+import prisma from "../configs/prisma.js"
 
 export const getAllChats = async (req, res) => {
     try {

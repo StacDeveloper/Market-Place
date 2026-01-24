@@ -9,7 +9,7 @@ import WithdrawModel from '../components/WithdrawModel'
 
 const MyListings = () => {
   const { userListings, balance } = useSelector((state) => state.listing)
-
+  console.log(userListings)
   const currency = import.meta.env.VITE_CURRENCY || "$"
   const navigate = useNavigate()
 
