@@ -1,14 +1,20 @@
 import React, { useEffect, useState } from 'react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate, useParams } from 'react-router-dom'
 import { LoaderIcon, toast } from "react-hot-toast"
 import { Upload, X } from "lucide-react"
+import { useAuth } from "@clerk/clerk-react"
+import api from '../configs/axios'
+import { getAllPublicListing, getAllUserListing } from '../app/features/listingsslice'
 
 
 const ManageListings = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const { userListings } = useSelector((state) => state.listing)
+  const { getToken } = useAuth()
+  const dispatch = useDispatch()
+
 
   const [loadingListing, SetloadingListing] = useState(false)
   const [isEditing, SetisEditing] = useState(false)
@@ -22,7 +28,7 @@ const ManageListings = () => {
     niche: "",
     price: "",
     description: "",
-    verfied: false,
+    verified: false,
     monetized: false,
     country: '',
     age_range: false,
@@ -52,6 +58,48 @@ const ManageListings = () => {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    toast.loading("Saving...")
+    const dataCopy = structuredClone(formData)
+    try {
+      if (isEditing) {
+        dataCopy.images = formData.images.filter((img) => typeof img === "string")
+        const formDataInstace = new FormData()
+        formDataInstace.append("accountDetails", JSON.stringify(dataCopy))
+        formData.images.filter((img) => typeof img !== "string").forEach((img) => {
+          formDataInstace.append('images', img)
+        })
+        const token = await getToken()
+
+        const { data } = api.put("/api/listing/update-listing", formDataInstace, { headers: { Authorization: `Bearer ${token}` } })
+        toast.dismissAll()
+        toast.success(data.message)
+        dispatch(getAllUserListing({ token }))
+        dispatch(getAllPublicListing(token))
+        navigate("/my-listings")
+
+
+      }
+      else {
+        delete dataCopy.images
+        const formDataInstace = new FormData()
+        formDataInstace.append("accountDetails", JSON.stringify(dataCopy))
+        formData.images.forEach((img) => {
+          formDataInstace.append('images', img)
+        })
+        const token = await getToken()
+        const { data } = api.post("/api/listing/create-listing", formDataInstace, { headers: { Authorization: `Bearer ${token}` } })
+
+        toast.dismissAll()
+        toast.success(data.message)
+        dispatch(getAllUserListing({ token }))
+        dispatch(getAllPublicListing({ token }))
+        navigate("/my-listings")
+      }
+
+    } catch (error) {
+      toast.dismissAll()
+      toast.error(error)
+    }
   }
   // Get listing data for edit if id is provided (edit mode)
 
@@ -117,14 +165,15 @@ const ManageListings = () => {
             </div>
 
             <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-6'>
-              <InputField label={'Primary Audience Country'} type='number' min={0} value={formData.country} placeholder={'United States'} onChange={(v) => handleInputChange('country', v)} required={true} />
+              <InputField label={'Primary Audience Country'} type='text' min={0} value={formData.country} placeholder={'United States'} onChange={(v) => handleInputChange('country', v)} required={true} />
 
               <SelectField label={'Primary Audiency Age Range *'} options={ageRange} value={formData.age_range} onChange={(v) => handleInputChange('age_range', v)}
 
               />
               <div className='space-y-3'>
-                <CheckBoxField label={'Account is verified on the platform'} checked={formData.verfied} onChange={(v) => handleInputChange('verified', v)} />
-                <CheckBoxField label={'Account is monetized'} checked={formData.monetized} onChange={(v) => handleInputChange('verified', v)} />
+                <CheckBoxField label={'Account is verified on the platform'} checked={formData.verified} onChange={(v) => handleInputChange('verified', v)} />
+
+                <CheckBoxField label={'Account is monetized'} checked={formData.monetized} onChange={(v) => handleInputChange('monetized', v)} />
               </div>
               {/* Pricing */}
             </div>
@@ -160,7 +209,7 @@ const ManageListings = () => {
               Cancel
             </button>
             <button type='submit' className='px-6 py-1 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors'>
-            {isEditing ? "Update-Listing" : 'Create-Listing'}
+              {isEditing ? "Update-Listing" : 'Create-Listing'}
             </button>
           </div>
         </form>
@@ -208,7 +257,7 @@ const SelectField = ({ label, options, value, onChange, required = false }) => {
 const CheckBoxField = ({ label, checked, onChange, required = false }) => {
   return (
     <label className='flex items-center space-x-2 cursor-pointer'>
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.value)} className='size-4' required={required} />
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className='size-4' required={required} />
       <span className='text-smn text-gray-700'>{label}</span>
     </label>
   )
