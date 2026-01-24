@@ -73,7 +73,7 @@ export const getAllListing = async (req, res) => {
 
 export const getAllUserListings = async (req, res) => {
     try {
-        const { userId } = req.auth()
+        const { userId } = await req.auth()
         const listings = await prisma.listing.findMany({
             where: {
                 ownerId: userId,
@@ -108,7 +108,7 @@ export const getAllUserListings = async (req, res) => {
 
 export const updateListings = async (req, res) => {
     try {
-        const { userId } = req.auth()
+        const { userId } = await req.auth()
         const accountDetails = JSON.parse(req.body.accountDetails)
 
         if (req.files.length + accountDetails.images.length > 5) {
@@ -170,7 +170,7 @@ export const updateListings = async (req, res) => {
 export const toggleStatus = async (req, res) => {
     try {
         const { id } = req.params
-        const { userId } = req.auth()
+        const { userId } = await req.auth()
 
         const listing = await prisma.listing.findUnique({
             where: { id: id, ownerId: userId }
@@ -203,7 +203,7 @@ export const toggleStatus = async (req, res) => {
 
 export const deleteUserListing = async (req, res) => {
     try {
-        const { userId } = req.auth()
+        const { userId } = await req.auth()
         const { listingId } = req.params
 
         const listing = await prisma.listing.findFirst({
@@ -238,7 +238,7 @@ export const deleteUserListing = async (req, res) => {
 
 export const addcredentials = async (req, res) => {
     try {
-        const { userId } = req.auth()
+        const { userId } = await req.auth()
         const { listingId, credential } = req.body
 
         if (!credential || credential.length === 0 || !listingId) {
@@ -316,7 +316,21 @@ export const getAllUserOrders = async (req, res) => {
             return res.status(400).json({ success: false, message: "No order found" })
         }
 
-        
+        const credentials = await prisma.credential.findMany({
+            where: {
+                listingId: {
+                    in: orders.map((ord) => ord.listingId)
+                }
+            }
+        })
+
+        const ordersWithCredentials = orders.map((ord) => {
+            const credential = credentials.find((cred) => cred.listingId === ord.listingId)
+            return { ...ord, credential }
+        })
+
+        return res.status(200).json({ success: true, ordersWithCredentials })
+
 
 
 
@@ -324,4 +338,46 @@ export const getAllUserOrders = async (req, res) => {
         console.log(error)
         res.status(500).json({ success: false, message: "Failed to get all user orders", error })
     }
+}
+
+export const withDrawAmount = async (req, res) => {
+    try {
+        const { userId } = await req.auth()
+        const { amount, account } = req.body
+        const user = await prisma.user.findUnique({
+            where: { id: userId }
+        })
+
+        const balance = user.earned - user.withdrawn
+
+        if (amount > balance) {
+            return res.status(400).json({ success: false, message: "You dont have enough balance" })
+        }
+        const withdrawal = await prisma.withdrawal.create({
+            data: {
+                userId,
+                amount,
+                account
+            }
+        })
+
+        const updateAmt = await prisma.user.update({
+            where: { id: userId },
+            data: {
+                withdrawn: { increment: amount }
+            }
+        })
+
+        return res.status(200).json({ success: true, updateAmt, withdrawal, message: "Successfully applied for withdrawal" })
+
+
+
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ success: false, message: "failed to get withdraw amount", error })
+    }
+}
+
+export const purchaseAccount = async(req,res)=>{
+
 }
