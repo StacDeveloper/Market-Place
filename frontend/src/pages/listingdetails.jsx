@@ -28,11 +28,10 @@ const ListingDetails = () => {
   }
 
   const loadChatbox = () => {
-    dispatch(setChat({ listing: listing }))
+    dispatch(setChat({  listing }))
   }
 
   const purchaseAccount = async () => {
-
   }
 
   useEffect(() => {

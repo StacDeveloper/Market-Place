@@ -1,15 +1,22 @@
 import { ArrowDownCircleIcon, CheckCircle, DollarSign, Eye, Plus, TrendingUp, LockIcon, WalletIcon, CoinsIcon, StarIcon, Users, BanIcon, XCircle, Clock, TrashIcon, EyeOffIcon, Edit, EyeIcon, Copyright } from 'lucide-react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import StatsCard from '../components/StatsCard'
 import { platformIcons } from '../assets/assets'
 import { useState } from 'react'
 import CredentialsSubmission from '../components/CredentialsSubmission'
 import WithdrawModel from '../components/WithdrawModel'
+import { useAuth } from "@clerk/clerk-react"
+import toast from 'react-hot-toast'
+import api from '../configs/axios'
+import { getAllPublicListing, getAllUserListing } from '../app/features/listingsslice'
+
 
 const MyListings = () => {
   const { userListings, balance } = useSelector((state) => state.listing)
-  console.log(userListings)
+
+  const { getToken } = useAuth()
+  const dispatch = useDispatch()
   const currency = import.meta.env.VITE_CURRENCY || "$"
   const navigate = useNavigate()
 
@@ -60,13 +67,55 @@ const MyListings = () => {
   }
 
   async function toggleStatus(listId) {
-
+    try {
+      toast.loading("Updating Listing Status...")
+      const token = await getToken()
+      const { data } = await api.put(`/api/listing/${listId}/status`, {}, { headers: { Authorization: `Bearer ${token}` } })
+      dispatch(getAllPublicListing(token))
+      dispatch(getAllUserListing(token))
+      toast.dismissAll()
+      toast.success(data.message)
+    } catch (error) {
+      console.log(error)
+      toast.dismissAll()
+      toast.error(error)
+    }
   }
   async function deleteList(listId) {
-
+    console.log(listId)
+    try {
+      const confirm = window.confirm("Are you sure you want to delete this listing? if credentials are changed, new credentials will be sent to your email")
+      if (confirm) {
+        toast.loading("Deleting Listing")
+        const token = await getToken()
+        const { data } = await api.delete(`/api/listing/${listId}`, { headers: { Authorization: `Bearer ${token}` } })
+        dispatch(getAllPublicListing(token))
+        dispatch(getAllUserListing(token))
+        toast.dismissAll()
+        toast.success(data.message)
+      }
+    } catch (error) {
+      console.log(error)
+      toast.dismissAll()
+      toast.error(error)
+    }
   }
-  async function MarkasFeatured(listId) {
 
+  async function MarkasFeatured(listId) {
+    try {
+      toast.loading("Featuring Listing")
+      const token = await getToken()
+      const { data } = await api.put(`/api/listing/featured/${listId}`, {}, { headers: { Authorization: `Bearer ${token}` } })
+      dispatch(getAllPublicListing(token))
+      dispatch(getAllUserListing(token))
+      toast.dismissAll()
+      console.log(data)
+      toast.success(data.message)
+    } catch (error) {
+      console.log(error)
+      toast.dismissAll()
+      toast.error(error)
+    }
   }
 
   return (
@@ -183,14 +232,14 @@ const MyListings = () => {
                     <span className='text-2xl font-bold text-gray-800'>{currency}{list.price.toLocaleString()}</span>
                     <div className='flex items-center space-x-2'>
                       {list.status !== "sold" && (
-                        <button onClick={deleteList(list.id)} className='p-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-red-500'>
+                        <button onClick={() => deleteList(list.id)} className='p-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-red-500'>
                           <TrashIcon className='size-4' />
                         </button>
                       )}
                       <button onClick={() => { navigate(`/edit-listings/${list.id}`) }} className='p-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-indigo-600'>
                         <Edit className="size-4" />
                       </button>
-                      <button onClick={toggleStatus(list.id)} className='p-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-purle-600'>
+                      <button onClick={() => toggleStatus(list.id)} className='p-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-purle-600'>
                         {list.status === "active" && (
                           <EyeOffIcon className='size-4' />
                         )}

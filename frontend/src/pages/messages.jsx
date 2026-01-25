@@ -4,18 +4,30 @@ import { dummyChats } from "../assets/assets"
 import { format, isToday, isYesterday, parseISO } from "date-fns"
 import { useDispatch } from "react-redux"
 import { setChat } from '../app/features/chatslice'
+import { useAuth, useUser } from '@clerk/clerk-react'
+import api from '../configs/axios'
+import toast from 'react-hot-toast'
 
 const MessagesPage = () => {
   const dispatch = useDispatch()
-  const user = { id: "user_1" }
+  const { user, isLoaded } = useUser()
+  const { getToken } = useAuth()
 
   const [chats, Setchats] = useState([])
   const [searchQuery, SetsearchQuery] = useState("")
   const [loading, Setloading] = useState(true)
 
   async function fetchUserChats() {
-    Setchats(dummyChats)
-    Setloading(false)
+    try {
+      const token = await getToken()
+      const { data } = await api.get("/api/chat/user-chats", { headers: { Authorization: `Bearer ${token}` } })
+      Setchats(data.chats)
+      Setloading(false)
+    } catch (error) {
+      console.log(error)
+      toast.error(error)
+      Setloading(false)
+    }
   }
 
   const filteredChats = useMemo(() => {
@@ -43,12 +55,14 @@ const MessagesPage = () => {
   }
 
   useEffect(() => {
-    fetchUserChats()
-    const interval = setInterval(() => {
+    if (user && isLoaded) {
       fetchUserChats()
-    }, 10 * 100)
-    return () => clearInterval(interval)
-  }, [])
+      const interval = setInterval(() => {
+        fetchUserChats()
+      }, 10 * 100)
+      return () => clearInterval(interval)
+    }
+  }, [user, isLoaded])
 
   return (
     // This are the new changes
