@@ -1,4 +1,18 @@
-import { createSlice } from "@reduxjs/toolkit"
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit"
+import api from "../../configs/axios"
+
+export const getSellerChat = createAsyncThunk("/chat/sellerchat", async ({ getToken, listing, chatId }) => {
+    try {
+        const token = await getToken()
+        const { data } = await api.post("/api/chat/getchats", { listing, chatId }, { headers: { Authorization: `Bearer ${token}` } })
+        console.log(data)
+        return data
+    } catch (error) {
+        console.log(error)
+    }
+
+})
+
 
 const chateSlice = createSlice({
     name: "chat",
@@ -20,6 +34,15 @@ const chateSlice = createSlice({
             state.isOpen = false
             state.chatId = null
         }
+    }, extraReducers: (builder) => {
+        builder.addCase(getSellerChat.fulfilled, (state, action) => {
+            if (action.payload.chatId) {
+                state.chatId = action.payload?.chatId
+            }
+            if (action.payload.listing) {
+                state.listing = action.payload?.listing
+            }
+        })
     }
 })
 

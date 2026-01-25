@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Route, Routes, useLocation } from 'react-router-dom'
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import HomePage from './pages/homepage'
 import MarketPlace from './pages/marketPlace'
 import MyListings from './pages/mylistings'
@@ -28,7 +28,7 @@ const App = () => {
   const { pathname } = useLocation()
   const { getToken } = useAuth()
   const { user, isLoaded } = useUser()
-
+  const navigate= useNavigate()
   const dispatch = useDispatch()
 
 
@@ -42,6 +42,14 @@ const App = () => {
       dispatch(getAllUserListing(getToken))
     }
   }, [isLoaded, user])
+
+  if(!isLoaded){
+    return (
+      <div>
+        Loading.....
+      </div>
+    )
+  }
 
   return (
     <div>

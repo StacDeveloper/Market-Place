@@ -179,7 +179,7 @@ export const toggleStatus = async (req, res) => {
         if (!listing) {
             return res.status(404).json({ success: false, message: "Listing not found" })
         }
-        if (!listing.status === "active" || listing.status === "inactive") {
+        if (listing.status === "active" || listing.status === "inactive") {
             await prisma.listing.update({
                 where: { id: id, ownerId: userId },
                 data: {
@@ -313,7 +313,7 @@ export const getAllUserOrders = async (req, res) => {
         })
 
         if (!orders || orders.length === 0) {
-            return res.status(400).json({ success: false, message: "No order found" })
+            return res.status(200).json({ success: true, message: "No order found", orders: [] })
         }
 
         const credentials = await prisma.credential.findMany({
@@ -378,6 +378,6 @@ export const withDrawAmount = async (req, res) => {
     }
 }
 
-export const purchaseAccount = async(req,res)=>{
+export const purchaseAccount = async (req, res) => {
 
 }

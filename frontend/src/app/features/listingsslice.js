@@ -3,10 +3,9 @@ import api from "../../configs/axios"
 
 
 export const getAllPublicListing = createAsyncThunk("listing/getAllPublicListing", async (getToken) => {
+    const token = await getToken()
     try {
-        const token = await getToken()
         const { data } = await api.get("/api/listing/public", { headers: { Authorization: `Bearer ${token}` } })
-
         return data
 
     } catch (error) {
@@ -16,8 +15,8 @@ export const getAllPublicListing = createAsyncThunk("listing/getAllPublicListing
 })
 
 export const getAllUserListing = createAsyncThunk("listing/getAllUserListing", async (getToken) => {
+    const token = await getToken()
     try {
-        const token = await getToken()
         const { data } = await api.get("/api/listing/user", { headers: { Authorization: `Bearer ${token}` } })
         return data
 

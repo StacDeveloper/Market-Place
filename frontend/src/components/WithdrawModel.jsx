@@ -1,7 +1,14 @@
+import { useAuth } from '@clerk/clerk-react'
 import { X } from 'lucide-react'
 import React, { useState } from 'react'
+import toast from 'react-hot-toast'
+import api from '../configs/axios'
+import { useDispatch } from 'react-redux'
+import { getAllUserListing } from '../app/features/listingsslice'
 
 const WithdrawModel = ({ onClose }) => {
+    const { getToken } = useAuth()
+    const dispatch = useDispatch()
     const [amount, setAmount] = useState("")
     const [account, setAccount] = useState([
         { type: "text", name: "Account Holder Name", value: "" },
@@ -14,8 +21,29 @@ const WithdrawModel = ({ onClose }) => {
 
     const handleSubmission = async (e) => {
         e.preventDefault()
+        try {
+            if (account.length === 0) {
+                return toast.error("Please add atleast 1 field")
+            }
+            for (const field of account) {
+                if (!field.value) {
+                    return toast.error(`Please fill in the ${field.name} field `)
+                }
+            }
+            const confirm = window.confirm("Are you sure you want to submit?")
+            if (!confirm) return
+            const token = await getToken()
+            const { data } = await api.post("/api/listing/withdraw", { account, amount: parseInt(amount) }, { headers: { Authorization: `Bearer ${token}` } })
+            toast.success(data.message)
+            dispatch(getAllUserListing(token))
+            onClose()
+
+        } catch (error) {
+            console.log(error)
+            toast.error(error)
+        }
     }
-    
+
     return (
         <div className='fixed inset-0 bg-black/70 backdrop-blur bg-opacity-50 z-100 flex items-center justify-center sm:p-4'>
             <div className='bg-white sm:rounded-lg shadow-2xl w-full max-w-lg h-screen sm:h-auto flex flex-col'>
@@ -28,7 +56,7 @@ const WithdrawModel = ({ onClose }) => {
                         <X className='w-5 h-6' />
                     </button>
                 </div>
-                
+
                 {/* Form */}
                 <form className='flex flex-col gap-4 p-4 overflow-y-auto' onSubmit={handleSubmission}>
                     {/* Amount Field */}
@@ -36,12 +64,12 @@ const WithdrawModel = ({ onClose }) => {
                         <label className='text-sm font-medium text-gray-800'>
                             Amount
                         </label>
-                        <input 
-                            type='number' 
-                            value={amount} 
+                        <input
+                            type='number'
+                            value={amount}
                             onChange={(e) => setAmount(e.target.value)}
-                            className='w-full px-2 py-1.5 text-sm border border-gray-300 rounded outline-indigo-400' 
-                            required 
+                            className='w-full px-2 py-1.5 text-sm border border-gray-300 rounded outline-indigo-400'
+                            required
                         />
                     </div>
 
@@ -51,14 +79,14 @@ const WithdrawModel = ({ onClose }) => {
                             <label className='text-sm font-medium text-gray-800'>
                                 {field.name}
                             </label>
-                            <input 
-                                type={field.type} 
-                                value={field.value} 
-                                onChange={(e) => 
-                                    setAccount((prev) => 
-                                    prev.map((c, i) => i === index ? { ...c, value: e.target.value } : c)
-                                )} 
-                                className='w-full px-2 py-1.5 text-sm border border-gray-300 rounded outline-indigo-400' 
+                            <input
+                                type={field.type}
+                                value={field.value}
+                                onChange={(e) =>
+                                    setAccount((prev) =>
+                                        prev.map((c, i) => i === index ? { ...c, value: e.target.value } : c)
+                                    )}
+                                className='w-full px-2 py-1.5 text-sm border border-gray-300 rounded outline-indigo-400'
                                 required
                             />
                         </div>
