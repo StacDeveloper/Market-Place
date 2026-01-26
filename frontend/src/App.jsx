@@ -46,7 +46,7 @@ const App = () => {
   if(!isLoaded){
     return (
       <div>
-        Loading.....
+        <Loading/>
       </div>
     )
   }

@@ -21,6 +21,7 @@ const MessagesPage = () => {
     try {
       const token = await getToken()
       const { data } = await api.get("/api/chat/user-chats", { headers: { Authorization: `Bearer ${token}` } })
+      console.log(data)
       Setchats(data.chats)
       Setloading(false)
     } catch (error) {
@@ -29,6 +30,7 @@ const MessagesPage = () => {
       Setloading(false)
     }
   }
+  
 
   const filteredChats = useMemo(() => {
     const query = searchQuery.toLowerCase();

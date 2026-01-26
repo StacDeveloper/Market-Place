@@ -4,17 +4,30 @@ import { useEffect } from 'react';
 import ListingDetailsModal from "../admin-components/ListingDetailsModal"
 import { Loader2Icon } from 'lucide-react';
 import { dummyOrders } from '../../assets/assets';
+import { useAuth } from "@clerk/clerk-react"
+import toast from "react-hot-toast"
+import api from "../../configs/axios"
 
 const Transactions = () => {
     const currency = import.meta.env.VITE_CURRENCY || '$';
-
+    const { getToken } = useAuth()
     const [trasactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(null);
 
     const getTransactions = async () => {
-        setTransactions(dummyOrders);
-        setLoading(false);
+        try {
+            const token = await getToken()
+            const { data } = await api.get("/api/admin/transactions", { headers: { Authorization: `Bearer ${token}` } })
+            setTransactions(data.verifiyCustomerId)
+            setLoading(false)
+        } catch (error) {
+            console.log(error)
+            toast.error(error)
+        }
+        finally {
+            setLoading(false)
+        }
     };
 
     useEffect(() => {
@@ -42,23 +55,27 @@ const Transactions = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {trasactions.map((t, index) => (
-                            <tr key={index} className='border-t border-gray-200 hover:bg-indigo-50/50'>
-                                <td className='pl-4 py-3'>{index + 1}.</td>
-                                <td className='px-4 py-3'>@{t.listing.username}</td>
-                                <td className='px-4 py-3'>{t.listing.platform}</td>
-                                <td className='px-4 py-3'>
-                                    {currency}
-                                    {t.amount}
-                                </td>
-                                <td className='px-4 py-3'>{new Date(t.createdAt).toLocaleString()}</td>
-                                <td className='px-4 py-3'>
-                                    <button onClick={() => setShowModal(t.listing)} className='text-indigo-600 font-medium'>
-                                        more details
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
+                        {trasactions && !trasactions.length === 0 && (
+                            trasactions.map((t, index) => (
+                                <tr key={index} className='border-t border-gray-200 hover:bg-indigo-50/50'>
+                                    <td className='pl-4 py-3'>{index + 1}.</td>
+                                    <td className='px-4 py-3'>@{t.listing.username}</td>
+                                    <td className='px-4 py-3'>{t.listing.platform}</td>
+                                    <td className='px-4 py-3'>
+                                        {currency}
+                                        {t.amount}
+                                    </td>
+                                    <td className='px-4 py-3'>{new Date(t.createdAt).toLocaleString()}</td>
+                                    <td className='px-4 py-3'>
+                                        <button onClick={() => setShowModal(t.listing)} className='text-indigo-600 font-medium'>
+                                            more details
+                                        </button>
+                                    </td>
+                                </tr>
+                            )))}
+
+
+
                     </tbody>
                 </table>
             </div>
