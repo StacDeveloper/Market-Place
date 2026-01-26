@@ -4,16 +4,26 @@ import { useState } from 'react';
 import CredentialVerifyModal from "../admin-components/CredentialVerifyModal"
 import { Loader2Icon } from 'lucide-react';
 import { dummyListings } from '../../assets/assets';
+import { useAuth } from "@clerk/clerk-react";
+import toast from "react-hot-toast";
+import api from "../../configs/axios";
 
 const CredentialVerify = () => {
-
+    const { getToken } = useAuth()
     const [listings, setListings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(null);
 
     const fetchAllUnverifiedListings = async () => {
-        setListings(dummyListings);
-        setLoading(false);
+        try {
+            const token = await getToken()
+            const { data } = await api.get("/api/admin/unverified-listings", { headers: { Authorization: `Bearer ${token}` } })
+            setListings(data.listings)
+            setLoading(false)
+        } catch (error) {
+            console.log(error)
+            toast.error(error)
+        }
     };
 
     useEffect(() => {

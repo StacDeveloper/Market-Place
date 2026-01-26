@@ -5,8 +5,12 @@ import { getProfileLink, platformIcons } from '../assets/assets'
 import { useDispatch, useSelector } from 'react-redux'
 import { ArrowLeftIcon, ArrowUpRightFromSquareIcon, CheckCircle, ChevronLeftIcon, ChevronRightIcon, DollarSign, Loader2Icon, Users, LucideCandlestickChart, Eye, Calendar, MapPin, MessageCircle, ShoppingBagIcon, Copyright } from 'lucide-react'
 import { setChat } from '../app/features/chatslice'
+import { useUser } from "@clerk/clerk-react"
+import toast from "react-hot-toast"
 
 const ListingDetails = () => {
+
+  const { user, isLoaded } = useUser()
 
   const dispatch = useDispatch()
 
@@ -28,7 +32,9 @@ const ListingDetails = () => {
   }
 
   const loadChatbox = () => {
-    dispatch(setChat({  listing }))
+    if (!isLoaded || !user) return toast.error("Please Login first to chat with seller")
+      if(user.id ===listing.ownerId) return toast.error("You are the seller of this listing")
+      dispatch(setChat({ listing }))
   }
 
   const purchaseAccount = async () => {
