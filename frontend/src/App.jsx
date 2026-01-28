@@ -7,7 +7,7 @@ import ListingDetails from './pages/listingdetails'
 import ManageListings from './pages/managelistings'
 import MessagesPage from './pages/messages'
 import MyOrders from './pages/myorders'
-import Loading from './pages/Loading'
+import Loading from './pages/loading'
 import Navbar from './components/Navbar'
 import ChatBox from './components/ChatBox'
 import { Toaster } from "react-hot-toast"
