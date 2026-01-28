@@ -15,7 +15,7 @@ listingRouter.post("/add-credentials", protectRoute, addcredentials)
 listingRouter.put("/featured/:id", protectRoute, markedFeatured)
 listingRouter.get("/user-orders", protectRoute, getAllUserOrders)
 listingRouter.post("/withdraw", protectRoute, withDrawAmount)
-listingRouter.post("/purchase-account/:listingid", protectRoute, purchaseAccount)
+listingRouter.get("/purchase-account/:listingId", protectRoute, purchaseAccount)
 
 
 export default listingRouter

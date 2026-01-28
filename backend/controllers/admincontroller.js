@@ -107,7 +107,12 @@ export const getAllUnverifiedListings = async (req, res) => {
 
 export const getCredential = async (req, res) => {
     try {
-        const { listingId } = req.params
+        let { listingId } = req.params
+
+        if (listingId.startsWith(":")) {
+            listingId = listingId.slice(1)
+        }
+
         const credential = await prisma.credential.findFirst({
             where: { listingId }
         })
@@ -123,14 +128,17 @@ export const getCredential = async (req, res) => {
 
 export const markCredentialVerified = async (req, res) => {
     try {
-        const { listingId } = req.params
+        let { listingId } = req.params
+        if (listingId.startsWith(":")) {
+            listingId = listingId.slice(1)
+        }
         const markVerified = await prisma.listing.update({
             where: { id: listingId },
             data: {
                 isCredentialVerified: true
             }
         })
-        return res.json({ success: true, markVerified })
+        return res.json({ success: true, markVerified, message: "Listing Verified Successfully" })
 
     } catch (error) {
         console.log(error)
