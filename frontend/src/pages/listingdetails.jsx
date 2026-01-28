@@ -5,13 +5,14 @@ import { getProfileLink, platformIcons } from '../assets/assets'
 import { useDispatch, useSelector } from 'react-redux'
 import { ArrowLeftIcon, ArrowUpRightFromSquareIcon, CheckCircle, ChevronLeftIcon, ChevronRightIcon, DollarSign, Loader2Icon, Users, LucideCandlestickChart, Eye, Calendar, MapPin, MessageCircle, ShoppingBagIcon, Copyright } from 'lucide-react'
 import { setChat } from '../app/features/chatslice'
-import { useUser } from "@clerk/clerk-react"
+import { useAuth, useClerk, useUser } from "@clerk/clerk-react"
 import toast from "react-hot-toast"
+import api from '../configs/axios'
 
 const ListingDetails = () => {
-
+  const { getToken } = useAuth()
   const { user, isLoaded } = useUser()
-
+  const { opensignIn } = useClerk()
   const dispatch = useDispatch()
 
   const currency = import.meta.env.VITE_CURRENCY || "$"
@@ -22,7 +23,7 @@ const ListingDetails = () => {
   const { listingId } = useParams()
   const { listings } = useSelector((state) => state.listing)
   const images = listing?.images || ""
-
+  
   const previousSlide = () => {
     SetCurrent((prev) => (prev === 0 ? images.length - 1 : prev - 1))
   }
@@ -32,12 +33,35 @@ const ListingDetails = () => {
   }
 
   const loadChatbox = () => {
-    if (!isLoaded || !user) return toast.error("Please Login first to chat with seller")
-      if(user.id ===listing.ownerId) return toast.error("You are the seller of this listing")
+    if (!isLoaded || !user) {
+      return toast.error("Please Login first to chat with seller")
+    }
+    if (user.id === listing.ownerId) {
+
+      return toast.error("You are the seller of this listing")
+    } else {
       dispatch(setChat({ listing }))
+    }
   }
 
+
   const purchaseAccount = async () => {
+    try {
+      if (!user) {
+        return opensignIn()
+      }
+      toast.loading("Creating Payment Link")
+      const token = await getToken()
+      const { data } = await api.get(`/api/listing/purchase-account/${listing.id}`, { headers: { Authorization: `Bearer ${token}` } })
+      console.log(listing.id)
+      console.log(data)
+      toast.dismissAll()
+      window.location.href = data.paymentLink
+
+    } catch (error) {
+      console.log(error)
+      toast.error(error)
+    }
   }
 
   useEffect(() => {
@@ -46,6 +70,8 @@ const ListingDetails = () => {
       Setlisting(foundListing)
     }
   }, [listingId, listings])
+
+  console.log(listing)
 
   return listing ? (
     <div className='mx-auto min-h-screen px-6 md:px-16 lg:px-24 xl:px-32'>
@@ -113,7 +139,7 @@ const ListingDetails = () => {
                   <button onClick={loadChatbox} className='w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition text-sm font-medium flex items-center justify-center gap-2'>
                     <MessageCircle className='size-4' /> Chat with Seller
                   </button>
-                  {listing.isCredentialChanged && (
+                  {listing.isCredentialChanged && user.id !== listing.ownerId && (
                     <button onClick={purchaseAccount} className='w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition text-sm font-medium flex items-center justify-center gap-2'>
                       <ShoppingBagIcon className='size-4' /> Purchase Now
                     </button>

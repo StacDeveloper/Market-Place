@@ -1,6 +1,8 @@
 import imageKit from "../configs/imagekit.js"
 import prisma from "../configs/prisma.js"
 import fs from "fs"
+import Stripe from "stripe"
+import { inngest } from "../inngest/index.js"
 
 
 export const addListing = async (req, res) => {
@@ -220,7 +222,10 @@ export const deleteUserListing = async (req, res) => {
         }
 
         if (listing.isCredentialChanged) {
-
+            const changeCredential = await inngest.send({
+                name: "app/listing-deleted",
+                data: { listing, listingId }
+            })
         }
         const updateListing = await prisma.listing.update({
             where: { id: listingId },
@@ -379,5 +384,60 @@ export const withDrawAmount = async (req, res) => {
 }
 
 export const purchaseAccount = async (req, res) => {
+    try {
+        const { userId } = await req.auth()
+        const { listingId } = req.params
+        const { origin } = req.headers
 
+        const listing = await prisma.listing.findFirst({
+            where: { id: listingId, status: "active" }
+        })
+
+        if (!listing) {
+            return res.status(404).json({ success: false, message: "Listing not found" })
+        }
+        if (listing.ownerId === userId) {
+            return res.status(400).json({ success: false, message: "You cannot purchase your own listing" })
+        }
+        const transaction = await prisma.transaction.create({
+            data: {
+                listingId,
+                ownerId: listing.ownerId,
+                userId,
+                amount: listing.price
+            }
+        })
+
+        const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY)
+
+        const checkoutSession = await stripeInstance.checkout.sessions.create({
+            success_url: `${origin}/loading/my-orders`,
+            cancel_url: `${origin}/marketplace`,
+            line_items: [
+                {
+                    price_data: {
+                        currency: "usd",
+                        product_data: {
+                            name: `Purchasing Account @${listing.username} of ${listing.platform}`
+                        },
+                        unit_amount: Math.floor(transaction.amount) * 100
+                    },
+                    quantity: 1
+                }
+            ],
+            mode: "payment",
+            metadata: {
+                transactionId: transaction.id,
+                appId: "Market-Place",
+
+            },
+            expires_at: Math.floor(Date.now() / 1000) + 30 * 60 //Session will expire in 30 min
+        })
+        return res.json({ success: true, paymentLink: checkoutSession.url })
+
+
+    } catch (error) {
+        console.log(error)
+        return res.status(500).json({ success: false, message: "Api failed purchase Account", error })
+    }
 }

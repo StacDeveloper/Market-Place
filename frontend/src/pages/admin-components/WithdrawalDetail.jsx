@@ -1,16 +1,27 @@
 import toast from 'react-hot-toast';
 import { XIcon, CopyIcon } from 'lucide-react';
+import { useAuth } from '@clerk/clerk-react';
+import api from '../../configs/axios';
 
 const WithdrawalDetail = ({ data, onClose }) => {
     const currency = import.meta.env.VITE_CURRENCY || '$';
-
+    const { getToken } = useAuth()
     const copyToClipboard = ({ name, value }) => {
         navigator.clipboard.writeText(value || '');
         toast.success(`${name} copied to clipboard`);
     };
 
     const markAsWithdrawn = async () => {
-        
+        try {
+            const token = await getToken()
+            const res = await api.put(`/api/admin/withdrawal-mark/${data.id}`, {}, { headers: { Authorization: `Bearer ${token}` } })
+            toast.dismissAll()
+            toast.success(res.data.message)
+            onClose()
+        } catch (error) {
+            console.log(error)
+            toast.error(error)
+        }
     };
 
     return (
