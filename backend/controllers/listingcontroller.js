@@ -404,7 +404,8 @@ export const purchaseAccount = async (req, res) => {
                 listingId,
                 ownerId: listing.ownerId,
                 userId,
-                amount: listing.price
+                amount: listing.price,
+                isPaid:true
             }
         })
 

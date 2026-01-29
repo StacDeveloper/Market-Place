@@ -19,8 +19,8 @@ const MyOrders = () => {
       SetLoading(true)
       const token = await getToken()
       const { data } = await api.get("/api/listing/user-orders", { headers: { Authorization: `Bearer ${token}` } })
-
-      Setorders(data.orders)
+      console.log(data)
+      Setorders(data.ordersWithCredentials)
       SetLoading(false)
     } catch (error) {
       console.log(error)
@@ -34,7 +34,7 @@ const MyOrders = () => {
       fetchOrders()
     }
   }, [isLoaded, user])
-
+  console.log(orders)
   const mask = (val, type) => {
     if (!val && val !== 0) return ""
     if (type.toLowerCase() === "password") {
@@ -66,8 +66,8 @@ const MyOrders = () => {
       </div>
     )
   }
-
-  if (!orders.length) {
+  
+  if (orders.length === 0) {
     return (
       <div className='px-4 md:px-16 lg:px-24 xl:px-32'>
         <div className='max-w-2xl mx-auto mt-14 bg-white rounded-xl border border-gray-200 p-8 text-center'>
