@@ -139,7 +139,7 @@ const ListingDetails = () => {
                   <button onClick={loadChatbox} className='w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition text-sm font-medium flex items-center justify-center gap-2'>
                     <MessageCircle className='size-4' /> Chat with Seller
                   </button>
-                  {listing.isCredentialChanged && user.id !== listing.ownerId && (
+                  { user.id !== listing.ownerId && (
                     <button onClick={purchaseAccount} className='w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition text-sm font-medium flex items-center justify-center gap-2'>
                       <ShoppingBagIcon className='size-4' /> Purchase Now
                     </button>

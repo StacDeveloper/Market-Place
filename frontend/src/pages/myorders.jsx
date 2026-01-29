@@ -34,7 +34,7 @@ const MyOrders = () => {
       fetchOrders()
     }
   }, [isLoaded, user])
-
+  console.log(orders)
   const mask = (val, type) => {
     if (!val && val !== 0) return ""
     if (type.toLowerCase() === "password") {
