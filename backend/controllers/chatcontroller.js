@@ -1,5 +1,7 @@
 import prisma from "../configs/prisma.js"
 
+const clients = new Map()
+
 export const getAllChats = async (req, res) => {
     try {
         const { userId } = await req.auth()
@@ -12,7 +14,7 @@ export const getAllChats = async (req, res) => {
             return res.status(404).json({ success: false, message: "No listing found" })
         }
 
-        // If chatId is provided, fetch that specific chat
+
         if (chatId) {
             const existingChat = await prisma.chat.findFirst({
                 where: {
@@ -26,7 +28,7 @@ export const getAllChats = async (req, res) => {
             })
 
             if (existingChat) {
-                // Mark as read if needed
+
                 if (existingChat.isLastMessageRead === false && existingChat.messages?.length > 0) {
                     const lastMessage = existingChat.messages[existingChat.messages.length - 1]
                     const isLastMessageSendByMe = lastMessage.sender_id === userId
@@ -41,7 +43,7 @@ export const getAllChats = async (req, res) => {
             }
         }
 
-        // Use upsert to find or create chat
+
         const chat = await prisma.chat.upsert({
             where: {
                 chatUserId_ownerUserId_listingId: {
@@ -50,8 +52,8 @@ export const getAllChats = async (req, res) => {
                     listingId
                 }
             },
-            update: {},  // Don't update if exists
-            create: {    // Create if doesn't exist
+            update: {},
+            create: {
                 listingId,
                 chatUserId: userId,
                 ownerUserId: listing.ownerId
@@ -64,7 +66,7 @@ export const getAllChats = async (req, res) => {
             }
         })
 
-        // Mark as read if needed
+
         if (chat.isLastMessageRead === false && chat.messages?.length > 0) {
             const lastMessage = chat.messages[chat.messages.length - 1]
             const isLastMessageSendByMe = lastMessage.sender_id === userId
@@ -117,6 +119,21 @@ export const getAllUserChats = async (req, res) => {
     }
 }
 
+export const broadCastMessage = async (chatId, message) => {
+    let brodcastCount = 0
+    clients.forEach((c, key) => {
+        if (key.startsWith(`${chatId}-`)) {
+            try {
+                c.write(`data :${JSON.stringify({ type: "message", message })}\n\n`)
+                brodcastCount++
+            } catch (error) {
+                console.log(error)
+                clients.delete(key)
+            }
+        }
+    })
+}
+
 export const sendChatMessage = async (req, res) => {
     try {
         const { userId } = await req.auth()
@@ -154,7 +171,9 @@ export const sendChatMessage = async (req, res) => {
             data: createNewMessage
         })
 
-        res.status(200).json({ success: true, message: "Message Sent", sendMessage })
+        const newMessage = createNewMessage
+        broadCastMessage(chatId, createNewMessage)
+        res.status(200).json({ success: true, message: "Message Sent", newMessage })
 
         await prisma.chat.update({
             where: { id: chatId },
@@ -165,8 +184,51 @@ export const sendChatMessage = async (req, res) => {
             }
         })
 
-
     } catch (error) {
         res.status(500).json({ success: false, message: "Failed to send message", error })
+    }
+}
+
+
+export const SSEchat = async (req, res) => {
+    try {
+        const { chatId } = req.params
+        const { userId } = await req.auth()
+
+        const chat = await prisma.chat.findFirst({
+            where: {
+                id: chatId,
+                OR: [
+                    { ownerUser: userId },
+                    { chatUserId: userId }
+                ]
+            }
+        })
+
+        if (!chat) {
+            return res.status(404).json({ success: false, message: "Chat not found" })
+        }
+
+        res.setHeader("Content-Type", "text/event-stream")
+        res.setHeader("Cache-Control", "no-cache")
+        res.setHeader("Connection", "keep-alive")
+        res.setHeader("Access-Control-Allow-Origin", "*")
+
+        res.write(`data:${JSON.stringify({ type: "connected", chatId })}\n\n`)
+
+        const clientKey = `${chatId}-${userId}`
+        clients.set(clientKey, res)
+
+        const pingInterval = setInterval(() => {
+            res.write(`data:${JSON.stringify({ type: "ping" })}\n\n`)
+        }, 30000);
+
+        req.on("close", () => {
+            clearInterval(pingInterval)
+            clients.delete(clientKey)
+        })
+
+    } catch (error) {
+        console.log(error)
     }
 }

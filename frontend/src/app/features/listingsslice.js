@@ -18,6 +18,7 @@ export const getAllUserListing = createAsyncThunk("listing/getAllUserListing", a
     const token = await getToken()
     try {
         const { data } = await api.get("/api/listing/user", { headers: { Authorization: `Bearer ${token}` } })
+        console.log(data)
         return data
 
 
