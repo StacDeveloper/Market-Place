@@ -12,6 +12,7 @@ const ManageListings = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const { userListings } = useSelector((state) => state.listing)
+
   const { getToken } = useAuth()
   const dispatch = useDispatch()
 
@@ -70,12 +71,12 @@ const ManageListings = () => {
         })
         const token = await getToken()
 
-        const { data } = api.put("/api/listing/update-listing", formDataInstace, { headers: { Authorization: `Bearer ${token}` } })
+        const { data } = await api.put("/api/listing/update-listing", formDataInstace, { headers: { Authorization: `Bearer ${token}` } })
         toast.dismissAll()
         toast.success(data.message)
         dispatch(getAllUserListing({ token }))
         dispatch(getAllPublicListing(token))
-        navigate("/my-listings")
+        navigate("/mylistings")
 
 
       }
@@ -93,7 +94,7 @@ const ManageListings = () => {
         toast.success(data.message)
         dispatch(getAllUserListing({ token }))
         dispatch(getAllPublicListing({ token }))
-        navigate("/my-listings")
+        navigate("/mylistings")
       }
 
     } catch (error) {

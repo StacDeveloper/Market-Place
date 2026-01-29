@@ -1,278 +1,285 @@
-import { ArrowDownCircleIcon, CheckCircle, DollarSign, Eye, Plus, TrendingUp, LockIcon, WalletIcon, CoinsIcon, StarIcon, Users, BanIcon, XCircle, Clock, TrashIcon, EyeOffIcon, Edit, EyeIcon, Copyright } from 'lucide-react'
-import { useDispatch, useSelector } from 'react-redux'
-import { useNavigate } from 'react-router-dom'
-import StatsCard from '../components/StatsCard'
-import { platformIcons } from '../assets/assets'
-import { useState } from 'react'
-import CredentialsSubmission from '../components/CredentialsSubmission'
-import WithdrawModel from '../components/WithdrawModel'
-import { useAuth } from "@clerk/clerk-react"
-import toast from 'react-hot-toast'
-import api from '../configs/axios'
-import { getAllPublicListing, getAllUserListing } from '../app/features/listingsslice'
+  import { ArrowDownCircleIcon, CheckCircle, DollarSign, Eye, Plus, TrendingUp, LockIcon, WalletIcon, CoinsIcon, StarIcon, Users, BanIcon, XCircle, Clock, TrashIcon, EyeOffIcon, Edit, EyeIcon, Copyright } from 'lucide-react'
+  import { useDispatch, useSelector } from 'react-redux'
+  import { useNavigate } from 'react-router-dom'
+  import StatsCard from '../components/StatsCard'
+  import { platformIcons } from '../assets/assets'
+  import { useState } from 'react'
+  import CredentialsSubmission from '../components/CredentialsSubmission'
+  import WithdrawModel from '../components/WithdrawModel'
+  import { useAuth } from "@clerk/clerk-react"
+  import toast from 'react-hot-toast'
+  import api from '../configs/axios'
+  import { getAllPublicListing, getAllUserListing } from '../app/features/listingsslice'
+  import Loader from '../components/loader'
 
 
-const MyListings = () => {
-  const { userListings, balance } = useSelector((state) => state.listing)
+  const MyListings = () => {
+    const { userListings, balance } = useSelector((state) => state.listing)
 
-  const { getToken } = useAuth()
-  const dispatch = useDispatch()
-  const currency = import.meta.env.VITE_CURRENCY || "$"
-  const navigate = useNavigate()
+    const { getToken } = useAuth()
+    const dispatch = useDispatch()
+    const currency = import.meta.env.VITE_CURRENCY || "$"
+    const navigate = useNavigate()
 
-  const totalValue = userListings.reduce((sum, listing) => sum + (listing.price || 0), 0)
+    const totalValue = userListings.reduce((sum, listing) => sum + (listing.price || 0), 0)
 
-  const activeListings = userListings.filter((listing) => listing.status === "active").length
+    const activeListings = userListings.filter((listing) => listing.status === "active").length
 
-  const soldListings = userListings.filter((listing) => listing.status === "sold").length
+    const soldListings = userListings.filter((listing) => listing.status === "sold").length
 
-  const [showCredentials, SetShowCredentials] = useState(null)
-  const [withDrawal, SetShowWithdrawal] = useState(null)
+    const [showCredentials, SetShowCredentials] = useState(null)
+    const [withDrawal, SetShowWithdrawal] = useState(null)
 
-  const formatNumber = (number) => {
-    if (number >= 1000000) return (number / 1000000).toFixed(1) + "M"
-    if (number >= 1000) return (number / 1000).toFixed(1) + "k"
-    return number?.toString() || "0"
-  }
-
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case "active":
-        return <CheckCircle className='size-3.5' />
-      case "ban":
-        return <BanIcon className='size-3.5' />
-      case "sold":
-        return <DollarSign className='size-3.5' />
-      case "inactive":
-        return <XCircle className='size-3.5' />
-      default:
-        return <Clock className='size-3.5' />
-
+    const formatNumber = (number) => {
+      if (number >= 1000000) return (number / 1000000).toFixed(1) + "M"
+      if (number >= 1000) return (number / 1000).toFixed(1) + "k"
+      return number?.toString() || "0"
     }
-  }
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "active":
-        return "text-green-800"
-      case "ban":
-        return "text-red-800"
-      case "sold":
-        return "text-indigo-800"
-      case "inactive":
-        return "text-gray-800"
-      default:
-        return "text-gray-800"
 
-    }
-  }
+    const getStatusIcon = (status) => {
+      switch (status) {
+        case "active":
+          return <CheckCircle className='size-3.5' />
+        case "ban":
+          return <BanIcon className='size-3.5' />
+        case "sold":
+          return <DollarSign className='size-3.5' />
+        case "inactive":
+          return <XCircle className='size-3.5' />
+        default:
+          return <Clock className='size-3.5' />
 
-  async function toggleStatus(listId) {
-    try {
-      toast.loading("Updating Listing Status...")
-      const token = await getToken()
-      const { data } = await api.put(`/api/listing/${listId}/status`, {}, { headers: { Authorization: `Bearer ${token}` } })
-      dispatch(getAllPublicListing(token))
-      dispatch(getAllUserListing(token))
-      toast.dismissAll()
-      toast.success(data.message)
-    } catch (error) {
-      console.log(error)
-      toast.dismissAll()
-      toast.error(error)
+      }
     }
-  }
-  async function deleteList(listId) {
-    console.log(listId)
-    try {
-      const confirm = window.confirm("Are you sure you want to delete this listing? if credentials are changed, new credentials will be sent to your email")
-      if (confirm) {
-        toast.loading("Deleting Listing")
+    const getStatusColor = (status) => {
+      switch (status) {
+        case "active":
+          return "text-green-800"
+        case "ban":
+          return "text-red-800"
+        case "sold":
+          return "text-indigo-800"
+        case "inactive":
+          return "text-gray-800"
+        default:
+          return "text-gray-800"
+
+      }
+    }
+
+    async function toggleStatus(listId) {
+      try {
+        toast.loading("Updating Listing Status...")
         const token = await getToken()
-        const { data } = await api.delete(`/api/listing/${listId}`, { headers: { Authorization: `Bearer ${token}` } })
+        const { data } = await api.put(`/api/listing/${listId}/status`, {}, { headers: { Authorization: `Bearer ${token}` } })
         dispatch(getAllPublicListing(token))
         dispatch(getAllUserListing(token))
         toast.dismissAll()
         toast.success(data.message)
+      } catch (error) {
+        console.log(error)
+        toast.dismissAll()
+        toast.error("Error")
       }
-    } catch (error) {
-      console.log(error)
-      toast.dismissAll()
-      toast.error(error)
     }
-  }
-
-  async function MarkasFeatured(listId) {
-    try {
-      toast.loading("Featuring Listing")
-      const token = await getToken()
-      const { data } = await api.put(`/api/listing/featured/${listId}`, {}, { headers: { Authorization: `Bearer ${token}` } })
-      dispatch(getAllPublicListing(token))
-      dispatch(getAllUserListing(token))
-      toast.dismissAll()
-      console.log(data)
-      toast.success(data.message)
-    } catch (error) {
-      console.log(error)
-      toast.dismissAll()
-      toast.error(error)
+    async function deleteList(listId) {
+      console.log(listId)
+      try {
+        const confirm = window.confirm("Are you sure you want to delete this listing? if credentials are changed, new credentials will be sent to your email")
+        if (confirm) {
+          toast.loading("Deleting Listing")
+          const token = await getToken()
+          const { data } = await api.delete(`/api/listing/${listId}`, { headers: { Authorization: `Bearer ${token}` } })
+          dispatch(getAllPublicListing(token))
+          dispatch(getAllUserListing(token))
+          toast.dismissAll()
+          toast.success(data.message)
+        }
+      } catch (error) {
+        console.log(error)
+        toast.dismissAll()
+        toast.error("Error")
+      }
     }
-  }
 
-  return (
-    <div className='px-6 md:px-16 lg:px-24 xl:px-32 pt-8'>
-      {/* Header */}
-      <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-8'>
-        <div>
-          <h1 className='text-3xl font-bold text-gray-800'>My Listings</h1>
-          <p className='text-gray-600 mt-1'>Manage your social media account listings</p>
-        </div>
-        <button onClick={() => navigate('/create-listing')} className='bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded font-medium flex items-center space-x-2 mt-4 md:mt-0'>
-          <Plus className='size-4' />
-          <span>New Listings</span>
-        </button>
-      </div>
-      {/* Stats */}
-      <div className='grid grid-cols-1 md:grid-cols-4 gap-6 mb-8'>
-        <StatsCard title="Total Listings" value={userListings.length} icon={<Eye />} className='size-6 text-indigo-600' color={'indigo'} />
+    async function MarkasFeatured(listId) {
+      try {
+        toast.loading("Featuring Listing")
+        const token = await getToken()
+        const { data } = await api.put(`/api/listing/featured/${listId}`, {}, { headers: { Authorization: `Bearer ${token}` } })
+        dispatch(getAllPublicListing(token))
+        dispatch(getAllUserListing(token))
+        toast.dismissAll()
+        console.log(data)
+        toast.success(data.message)
+      } catch (error) {
+        console.log(error)
+        toast.dismissAll()
+        toast.error("Failed to mark as list")
+      }
+    }
 
-        <StatsCard title="Active Listings" value={activeListings} icon={<CheckCircle />} className='size-6 text-green-600' color={'green'} />
+    if (!userListings || !balance) {
+      return (
+        <Loader />
+      )
+    }
 
-        <StatsCard title="Sold" value={soldListings} icon={<TrendingUp />} className='size-6 text-indigo-600' color={'indigo'} />
-
-        <StatsCard title="Total Value" value={`${currency}${totalValue.toLocaleString()}`} icon={<DollarSign />} className='size-6 text-indigo-600' color={'yellow'} />
-      </div>
-
-      {/* Balance Section */}
-      <div className='flex flex-col sm:flex-row justify-between gap-4 xl:gap-20 p-6 mb-10 bg-white rounded-xl border border-gray-200'>
-        {[
-          { label: 'Earned', value: balance.earned, icon: WalletIcon },
-          { label: 'Withdrawn', value: balance.withdraw, icon: ArrowDownCircleIcon },
-          { label: 'Available', value: balance.available, icon: CoinsIcon },
-        ].map((label, index) => {
-          return (
-            <div onClick={() => label.label === "Available" && SetShowWithdrawal(true)} key={index} className='flex flex-1 items-center justify-between p-4 rounded-lg border border-gray-100 cursor-pointer'>
-              <div className='flex items-center gap-3'>
-                <label.icon className={"text-gray-500 w-6 h-6"} />
-                <span className='font-medium text-gray-600'>{label.label}</span>
-              </div>
-              <span className='text-xl font-medium text-gray-700'>
-                {currency}
-                {label?.value?.toFixed(2)}
-              </span>
-            </div>
-          )
-        })}
-      </div>
-      {/* Listings */}
-      {userListings.length === 0 ? (
-        <div className='bg-white rounded-lg border border-gray-200 p-16 text-center'>
-          <div className='w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-            <Plus className='w-8 h-8 text-gray-400' />
+    return (
+      <div className='px-6 md:px-16 lg:px-24 xl:px-32 pt-8'>
+        {/* Header */}
+        <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-8'>
+          <div>
+            <h1 className='text-3xl font-bold text-gray-800'>My Listings</h1>
+            <p className='text-gray-600 mt-1'>Manage your social media account listings</p>
           </div>
-          <h3 className='text-xl font-medium text-gray-800 mb-2'>No Listings Yet</h3>
-          <p className='text-gray-600 mb-6'>Start by creating your first listing</p>
-          <button onClick={() => navigate("/create-listing")} className='bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium'>Create First Listing</button>
+          <button onClick={() => navigate('/create-listing')} className='bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded font-medium flex items-center space-x-2 mt-4 md:mt-0'>
+            <Plus className='size-4' />
+            <span>New Listings</span>
+          </button>
         </div>
-      ) : (
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-          {userListings.map((list, index) => (
-            <div key={index} className='bg-white rounded-lg border border-gray-200 hover:shadow-lg shadow-gray-200/70 transition-shadow'>
-              <div className='p-6'>
-                <div className='flex items-start gap-4 justify-between mb-4'>
-                  {platformIcons[list.platform]}
-                  <div className='flex-1'>
-                    <div className='flex justify-between items-start'>
-                      <h3 className='text-lg font-semibold text-gray-800'>{list.title}</h3>
-                      <div className='flex items-center gap-2'>
-                        <div className='relative group'>
-                          <LockIcon size={14} />
-                          <div className='invisible group-hover:visible absolute right-0 top-0 pt-4.5 z-10'>
-                            <div className='bg-white text-gray-600 text-xs rounded border border-gray-200 p-2 px-3'>
-                              {!list.isCredentialSubmitted && (
-                                <>
-                                  <button onClick={() => SetShowCredentials(list)} className='flex items-center gap-2 text-nowrap'>
-                                    Add Credentials
-                                  </button>
-                                  <hr className='border border-gray-200 my-2' />
-                                </>
-                              )}
-                              <button className='text-nowrap'>
-                                Status : {""}
-                                <span className={`${list.isCredentialSubmitted ? list.isCredentialVerified ? list.isCredentialChanged ? "text-green-600" : "text-indigo-600" : "text-slate-600" : "text-red-600"}  `}>
-                                  {list.isCredentialSubmitted ? list.isCredentialVerified ? list.isCredentialChanged ? "Changed" : "Verfied" : "Submitted" : "Not-Submitted"}
-                                </span>
-                              </button>
+        {/* Stats */}
+        <div className='grid grid-cols-1 md:grid-cols-4 gap-6 mb-8'>
+          <StatsCard title="Total Listings" value={userListings.length} icon={<Eye />} className='size-6 text-indigo-600' color={'indigo'} />
+
+          <StatsCard title="Active Listings" value={activeListings} icon={<CheckCircle />} className='size-6 text-green-600' color={'green'} />
+
+          <StatsCard title="Sold" value={soldListings} icon={<TrendingUp />} className='size-6 text-indigo-600' color={'indigo'} />
+
+          <StatsCard title="Total Value" value={`${currency}${totalValue.toLocaleString()}`} icon={<DollarSign />} className='size-6 text-indigo-600' color={'yellow'} />
+        </div>
+
+        {/* Balance Section */}
+        <div className='flex flex-col sm:flex-row justify-between gap-4 xl:gap-20 p-6 mb-10 bg-white rounded-xl border border-gray-200'>
+          {[
+            { label: 'Earned', value: balance.earned, icon: WalletIcon },
+            { label: 'Withdrawn', value: balance.withdraw, icon: ArrowDownCircleIcon },
+            { label: 'Available', value: balance.available, icon: CoinsIcon },
+          ].map((label, index) => {
+            return (
+              <div onClick={() => label.label === "Available" && SetShowWithdrawal(true)} key={index} className='flex flex-1 items-center justify-between p-4 rounded-lg border border-gray-100 cursor-pointer'>
+                <div className='flex items-center gap-3'>
+                  <label.icon className={"text-gray-500 w-6 h-6"} />
+                  <span className='font-medium text-gray-600'>{label.label}</span>
+                </div>
+                <span className='text-xl font-medium text-gray-700'>
+                  {currency}
+                  {label?.value?.toFixed(2)}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+        {/* Listings */}
+        {userListings.length === 0 ? (
+          <div className='bg-white rounded-lg border border-gray-200 p-16 text-center'>
+            <div className='w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4'>
+              <Plus className='w-8 h-8 text-gray-400' />
+            </div>
+            <h3 className='text-xl font-medium text-gray-800 mb-2'>No Listings Yet</h3>
+            <p className='text-gray-600 mb-6'>Start by creating your first listing</p>
+            <button onClick={() => navigate("/create-listing")} className='bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium'>Create First Listing</button>
+          </div>
+        ) : (
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+            {userListings.map((list, index) => (
+              <div key={index} className='bg-white rounded-lg border border-gray-200 hover:shadow-lg shadow-gray-200/70 transition-shadow'>
+                <div className='p-6'>
+                  <div className='flex items-start gap-4 justify-between mb-4'>
+                    {platformIcons[list.platform]}
+                    <div className='flex-1'>
+                      <div className='flex justify-between items-start'>
+                        <h3 className='text-lg font-semibold text-gray-800'>{list.title}</h3>
+                        <div className='flex items-center gap-2'>
+                          <div className='relative group'>
+                            <LockIcon size={14} />
+                            <div className='invisible group-hover:visible absolute right-0 top-0 pt-4.5 z-10'>
+                              <div className='bg-white text-gray-600 text-xs rounded border border-gray-200 p-2 px-3'>
+                                {!list.isCredentialSubmitted && (
+                                  <>
+                                    <button onClick={() => SetShowCredentials(list)} className='flex items-center gap-2 text-nowrap'>
+                                      Add Credentials
+                                    </button>
+                                    <hr className='border border-gray-200 my-2' />
+                                  </>
+                                )}
+                                <button className='text-nowrap'>
+                                  Status : {""}
+                                  <span className={`${list.isCredentialSubmitted ? list.isCredentialVerified ? list.isCredentialChanged ? "text-green-600" : "text-indigo-600" : "text-slate-600" : "text-red-600"}  `}>
+                                    {list.isCredentialSubmitted ? list.isCredentialVerified ? list.isCredentialChanged ? "Changed" : "Verfied" : "Submitted" : "Not-Submitted"}
+                                  </span>
+                                </button>
+                              </div>
                             </div>
                           </div>
+                          {list.status === "active" && (
+                            <StarIcon onClick={() => MarkasFeatured(list.id)} size={18} className={`text-yellow-500 cursor-pointer ${list.featured && "fill-yellow-500"}`} />
+                          )}
                         </div>
-                        {list.status === "active" && (
-                          <StarIcon onClick={() => MarkasFeatured(list.id)} size={18} className={`text-yellow-500 cursor-pointer ${list.featured && "fill-yellow-500"}`} />
-                        )}
+                      </div>
+                      <p className='text-sm text-gray-600'><span>@{list.username}</span>
+                      </p>
+                    </div>
+                  </div>
+                  <div className='space-y-4'>
+                    <div className='grid grid-cols-2 gap-2 text-sm'>
+                      <div className='flex items-center space-x-2'>
+                        <Users className='size-4 text-gray-400' />
+                        <h3 className='font-medium'>{formatNumber(list.followers_count)} <span className='font-semibold'>Followers</span></h3>
+                      </div>
+                      <span className={`flex items-center justify-end gap-1 ${getStatusColor(list.status)}`}>
+                        {getStatusIcon(list.status)}{" "} <span>{list.status}</span>
+                      </span>
+                      <div className='flex items-center space-x-2'>
+                        <TrendingUp className='size-4 text-gray-400' />
+                        <span>{list.engagement_rate}% engagement</span>
                       </div>
                     </div>
-                    <p className='text-sm text-gray-600'><span>@{list.username}</span>
-                    </p>
-                  </div>
-                </div>
-                <div className='space-y-4'>
-                  <div className='grid grid-cols-2 gap-2 text-sm'>
-                    <div className='flex items-center space-x-2'>
-                      <Users className='size-4 text-gray-400' />
-                      <h3 className='font-medium'>{formatNumber(list.followers_count)} <span className='font-semibold'>Followers</span></h3>
-                    </div>
-                    <span className={`flex items-center justify-end gap-1 ${getStatusColor(list.status)}`}>
-                      {getStatusIcon(list.status)}{" "} <span>{list.status}</span>
-                    </span>
-                    <div className='flex items-center space-x-2'>
-                      <TrendingUp className='size-4 text-gray-400' />
-                      <span>{list.engagement_rate}% engagement</span>
-                    </div>
-                  </div>
-                  <div className='flex items-center justify-between pt-3 border-t border-gray-200'>
-                    <span className='text-2xl font-bold text-gray-800'>{currency}{list.price.toLocaleString()}</span>
-                    <div className='flex items-center space-x-2'>
-                      {list.status !== "sold" && (
-                        <button onClick={() => deleteList(list.id)} className='p-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-red-500'>
-                          <TrashIcon className='size-4' />
+                    <div className='flex items-center justify-between pt-3 border-t border-gray-200'>
+                      <span className='text-2xl font-bold text-gray-800'>{currency}{list.price.toLocaleString()}</span>
+                      <div className='flex items-center space-x-2'>
+                        {list.status !== "sold" && (
+                          <button onClick={() => deleteList(list.id)} className='p-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-red-500'>
+                            <TrashIcon className='size-4' />
+                          </button>
+                        )}
+                        <button onClick={() => { navigate(`/edit-listings/${list.id}`) }} className='p-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-indigo-600'>
+                          <Edit className="size-4" />
                         </button>
-                      )}
-                      <button onClick={() => { navigate(`/edit-listings/${list.id}`) }} className='p-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-indigo-600'>
-                        <Edit className="size-4" />
-                      </button>
-                      <button onClick={() => toggleStatus(list.id)} className='p-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-purle-600'>
-                        {list.status === "active" && (
-                          <EyeOffIcon className='size-4' />
-                        )}
-                        {list.status !== "active" && (
-                          <EyeIcon className='size-4' />
-                        )}
-                      </button>
+                        <button onClick={() => toggleStatus(list.id)} className='p-2 border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-purle-600'>
+                          {list.status === "active" && (
+                            <EyeOffIcon className='size-4' />
+                          )}
+                          {list.status !== "active" && (
+                            <EyeIcon className='size-4' />
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+        )}
+
+        {showCredentials && (
+          <CredentialsSubmission listing={showCredentials} onClose={() => SetShowCredentials(null)} />
+        )}
+
+        {withDrawal && (
+          <WithdrawModel onClose={() => SetShowWithdrawal(null)} />
+        )}
+
+        {/* Footer */}
+        <div className='bg-white border-t border-gray-200 p-6 text-center mt-10'>
+          <p className='text-sm text-gray-500 flex items-center justify-center gap-1'>
+            <Copyright className='size-4' /> 2025 <span className='text-indigo-600 font-medium'>Soham Mule</span>. All Rights Reserved.
+          </p>
         </div>
-      )}
+      </div >
 
-      {showCredentials && (
-        <CredentialsSubmission listing={showCredentials} onClose={() => SetShowCredentials(null)} />
-      )}
+    )
+  }
 
-      {withDrawal && (
-        <WithdrawModel onClose={() => SetShowWithdrawal(null)} />
-      )}
-
-      {/* Footer */}
-      <div className='bg-white border-t border-gray-200 p-6 text-center mt-10'>
-        <p className='text-sm text-gray-500 flex items-center justify-center gap-1'>
-          <Copyright className='size-4' /> 2025 <span className='text-indigo-600 font-medium'>Soham Mule</span>. All Rights Reserved.
-        </p>
-      </div>
-    </div >
-
-  )
-}
-
-export default MyListings
+  export default MyListings
