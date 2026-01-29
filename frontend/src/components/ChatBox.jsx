@@ -135,7 +135,7 @@ const ChatBox = () => {
         { chatId: chat.id, message: newMessage },
         { headers: { Authorization: `Bearer ${token}` } }
       )
-      
+
       if (data.newMessage && data.newMessage.sender_id) {
         SetMessages([...messages, data.newMessage])
       } else {

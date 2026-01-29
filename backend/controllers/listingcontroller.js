@@ -141,7 +141,7 @@ export const updateListings = async (req, res) => {
             const uploadImages = req.files.map(async (file) => {
                 const response = await imageKit.files.upload({
                     file: fs.createReadStream(file.path),
-                    filename: `${Date.now()}.png`,
+                    fileName: `${Date.now()}.png`,
                     folder: "marketplace",
                     transformation: {
                         pre: "w-1280 h-auto"

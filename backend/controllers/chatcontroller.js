@@ -2,6 +2,23 @@ import prisma from "../configs/prisma.js"
 
 const clients = new Map()
 
+export const broadCastMessage = async (chatId, message) => {
+    let brodcastCount = 0
+    clients.forEach((c, key) => {
+        if (key.startsWith(`${chatId}-`)) {
+            try {
+                console.log(c)
+                const m = c.write(`data :${JSON.stringify({ type: "message", message })}\n\n`)
+                console.log(m)
+                brodcastCount++
+            } catch (error) {
+                console.log(error)
+                clients.delete(key)
+            }
+        }
+    })
+}
+
 export const getAllChats = async (req, res) => {
     try {
         const { userId } = await req.auth()
@@ -77,7 +94,7 @@ export const getAllChats = async (req, res) => {
                 })
             }
         }
-
+        broadCastMessage(chatId, chat)
         return res.status(200).json({ success: true, chat })
 
     } catch (error) {
@@ -119,20 +136,7 @@ export const getAllUserChats = async (req, res) => {
     }
 }
 
-export const broadCastMessage = async (chatId, message) => {
-    let brodcastCount = 0
-    clients.forEach((c, key) => {
-        if (key.startsWith(`${chatId}-`)) {
-            try {
-                c.write(`data :${JSON.stringify({ type: "message", message })}\n\n`)
-                brodcastCount++
-            } catch (error) {
-                console.log(error)
-                clients.delete(key)
-            }
-        }
-    })
-}
+
 
 export const sendChatMessage = async (req, res) => {
     try {
